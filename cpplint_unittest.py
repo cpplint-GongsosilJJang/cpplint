@@ -152,13 +152,15 @@ class CpplintTestBase(unittest.TestCase):
   def setUp(self):
     # Allow subclasses to cheat os.path.abspath called in FileInfo class.
     self.os_path_abspath_orig = os.path.abspath
+    self.assertEquals = self.assertEqual
+    self.assertTrue = self.assertTrue
 
   def tearDown(self):
     os.path.abspath = self.os_path_abspath_orig
 
   # Perform lint on single line of input and return the error message.
   def PerformSingleLineLint(self, code):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     lines = code.split('\n')
     cpplint.RemoveMultiLineComments('foo.h', lines, error_collector)
     clean_lines = cpplint.CleansedLines(lines)
@@ -176,7 +178,7 @@ class CpplintTestBase(unittest.TestCase):
 
   # Perform lint over multiple lines and return the error message.
   def PerformMultiLineLint(self, code):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     lines = code.split('\n')
     cpplint.RemoveMultiLineComments('foo.h', lines, error_collector)
     lines = cpplint.CleansedLines(lines)
@@ -193,7 +195,7 @@ class CpplintTestBase(unittest.TestCase):
   # Similar to PerformMultiLineLint, but calls CheckLanguage instead of
   # CheckForNonStandardConstructs
   def PerformLanguageRulesCheck(self, file_name, code):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     include_state = cpplint._IncludeState()
     nesting_state = cpplint.NestingState()
     lines = code.split('\n')
@@ -221,7 +223,7 @@ class CpplintTestBase(unittest.TestCase):
       The accumulated errors.
     """
     file_name = 'foo.cc'
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     function_state = cpplint._FunctionState()
     lines = code.split('\n')
     cpplint.RemoveMultiLineComments(file_name, lines, error_collector)
@@ -233,7 +235,7 @@ class CpplintTestBase(unittest.TestCase):
 
   def PerformIncludeWhatYouUse(self, code, filename='foo.h', io=codecs):
     # First, build up the include state.
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     include_state = cpplint._IncludeState()
     nesting_state = cpplint.NestingState()
     lines = code.split('\n')
@@ -277,7 +279,7 @@ class CpplintTestBase(unittest.TestCase):
       self.doTestBlankLinesCheck(lines, start_errors, end_errors, extension)
 
   def doTestBlankLinesCheck(self, lines, start_errors, end_errors, extension):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.' + extension, extension, lines, error_collector)
     self.assertEquals(
         start_errors,
@@ -294,7 +296,7 @@ class CpplintTestBase(unittest.TestCase):
 class CpplintTest(CpplintTestBase):
 
   def GetNamespaceResults(self, lines):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.RemoveMultiLineComments('foo.h', lines, error_collector)
     lines = cpplint.CleansedLines(lines)
     nesting_state = cpplint.NestingState()
@@ -514,7 +516,7 @@ class CpplintTest(CpplintTestBase):
         'Use int16/int64/etc, rather than the C type long'
         '  [runtime/int] [4]')
     # NOLINTNEXTLINE silences warning for the next line instead of current line
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('test.cc', 'cc',
                             ['// Copyright 2014 Your Company.',
                              '// NOLINTNEXTLINE(whitespace/line_length)',
@@ -532,7 +534,7 @@ class CpplintTest(CpplintTestBase):
                             error_collector)
     self.assertEquals('', error_collector.Results())
     # LINT_C_FILE silences cast warnings for entire file.
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('test.h', 'h',
                             ['// Copyright 2014 Your Company.',
                              '// NOLINT(build/header_guard)',
@@ -566,7 +568,7 @@ class CpplintTest(CpplintTestBase):
                      'vim: se filetype=c :',
                      'vim: se sw=8 filetype=c :',
                      'vim: se sw=8 filetype=c ts=8 :']:
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData('test.h', 'h',
                               ['// Copyright 2014 Your Company.',
                                '// NOLINT(build/header_guard)',
@@ -578,7 +580,7 @@ class CpplintTest(CpplintTestBase):
                               error_collector)
       self.assertEquals('', error_collector.Results())
     # LINT_KERNEL_FILE silences whitespace/tab warnings for entire file.
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('test.h', 'h',
                             ['// Copyright 2014 Your Company.',
                              '// NOLINT(build/header_guard)',
@@ -590,7 +592,7 @@ class CpplintTest(CpplintTestBase):
                             error_collector)
     self.assertEquals('', error_collector.Results())
     # NOLINT, NOLINTNEXTLINE silences the readability/braces warning for "};".
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('test.cc', 'cc',
                             ['// Copyright 2014 Your Company.',
                              'for (int i = 0; i != 100; ++i) {',
@@ -851,7 +853,7 @@ class CpplintTest(CpplintTestBase):
     self.TestLint('std::function< int(bool) >', '')
     self.TestLint('mfunction<int(bool)>', '')
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(
         'test.cc', 'cc',
         ['// Copyright 2014 Your Company. All Rights Reserved.',
@@ -890,7 +892,7 @@ class CpplintTest(CpplintTestBase):
         'MOCK_CONST_METHOD1(method, SomeType(int));',
         '')
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('mock.cc', 'cc',
                             ['MOCK_METHOD1(method1,',
                              '             bool(int));',
@@ -1387,7 +1389,7 @@ class CpplintTest(CpplintTestBase):
     for extension in ['c', 'cc', 'cpp', 'cxx', 'c++', 'cu']:
       file_path = 'mydir/foo.' + extension
 
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData(file_path, extension,
                               ['const char* str = "This is a\\',
                                ' multiline string.";'],
@@ -1738,7 +1740,7 @@ class CpplintTest(CpplintTestBase):
           };""",
           '')
       # Special case for variadic arguments
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData('foo.cc', 'cc',
           ['class Foo {',
           '  template<typename... Args>',
@@ -1748,7 +1750,7 @@ class CpplintTest(CpplintTestBase):
       self.assertEquals(0, error_collector.ResultList().count(
         'Constructors that require multiple arguments should not be marked '
         'explicit.  [runtime/explicit] [0]'))
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData('foo.cc', 'cc',
           ['class Foo {',
           '  template<typename... Args>',
@@ -1758,7 +1760,7 @@ class CpplintTest(CpplintTestBase):
       self.assertEquals(0, error_collector.ResultList().count(
         'Constructors that require multiple arguments should not be marked '
         'explicit.  [runtime/explicit] [0]'))
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData('foo.cc', 'cc',
           ['class Foo {',
           '  template<typename... Args>',
@@ -1768,7 +1770,7 @@ class CpplintTest(CpplintTestBase):
       self.assertEquals(1, error_collector.ResultList().count(
         'Constructors callable with one argument should be marked explicit.'
         '  [runtime/explicit] [5]'))
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData('foo.cc', 'cc',
           ['class Foo {',
           '  template<typename... Args>',
@@ -1779,7 +1781,7 @@ class CpplintTest(CpplintTestBase):
         'Constructors callable with one argument should be marked explicit.'
         '  [runtime/explicit] [5]'))
       # Anything goes inside an assembly block
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData('foo.cc', 'cc',
                               ['void Func() {',
                                '  __asm__ (',
@@ -1889,7 +1891,7 @@ class CpplintTest(CpplintTestBase):
       self.TestLint('virtual int F() %s;' % virt_specifier, error_message)
       self.TestLint('virtual int F() %s {' % virt_specifier, error_message)
 
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData(
           'foo.cc', 'cc',
           ['// Copyright 2014 Your Company.',
@@ -1914,7 +1916,7 @@ class CpplintTest(CpplintTestBase):
     self.TestLint('int F() final override;', error_message)
     self.TestLint('int F() final override {}', error_message)
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(
         'foo.cc', 'cc',
         ['// Copyright 2014 Your Company.',
@@ -2088,7 +2090,7 @@ class CpplintTest(CpplintTestBase):
     for macro_name in (
         'DISALLOW_COPY_AND_ASSIGN',
         'DISALLOW_IMPLICIT_CONSTRUCTORS'):
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData(
           'foo.cc', 'cc',
           ['// Copyright 2014 Your Company.',
@@ -2104,7 +2106,7 @@ class CpplintTest(CpplintTestBase):
           '  [readability/constructors] [3]',
           error_collector.Results())
 
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData(
           'foo.cc', 'cc',
           ['// Copyright 2014 Your Company.',
@@ -2123,7 +2125,7 @@ class CpplintTest(CpplintTestBase):
           '  [readability/constructors] [3]',
           error_collector.Results())
 
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData(
           'foo.cc', 'cc',
           ['// Copyright 2014 Your Company.',
@@ -2456,7 +2458,7 @@ class CpplintTest(CpplintTestBase):
 
     # Don't warn on out-of-line method definitions.
     self.TestLint('void NS::Func(X& x) {', '')
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(
         'foo.cc', 'cc',
         ['// Copyright 2014 Your Company. All Rights Reserved.',
@@ -2470,7 +2472,7 @@ class CpplintTest(CpplintTestBase):
 
     # Other potential false positives.  These need full parser
     # state to reproduce as opposed to just TestLint.
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(
         'foo.cc', 'cc',
         ['// Copyright 2014 Your Company. All Rights Reserved.',
@@ -2513,7 +2515,7 @@ class CpplintTest(CpplintTestBase):
     self.assertEquals('', error_collector.Results())
 
     # Multi-line references
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(
         'foo.cc', 'cc',
         ['// Copyright 2014 Your Company. All Rights Reserved.',
@@ -2539,7 +2541,7 @@ class CpplintTest(CpplintTestBase):
         error_collector.Results())
 
     # A peculiar false positive due to bad template argument parsing
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(
         'foo.cc', 'cc',
         ['// Copyright 2014 Your Company. All Rights Reserved.',
@@ -2559,7 +2561,7 @@ class CpplintTest(CpplintTestBase):
                   '{ should almost always be at the end of the previous line'
                   '  [whitespace/braces] [4]')
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['int function()',
                              '{',  # warning here
@@ -3070,7 +3072,7 @@ class CpplintTest(CpplintTestBase):
                   '}\n', '')
 
     # Check multiline cases.
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['// Copyright 2014 Your Company.',
                              'string Class',
@@ -3221,7 +3223,7 @@ class CpplintTest(CpplintTestBase):
   # 1' line was also causing the issue.
   def testLinePrecededByEmptyOrCommentLines(self):
     def DoTest(self, lines):
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData('foo.cc', 'cc', lines, error_collector)
       # The warning appears only once.
       self.assertEquals(
@@ -3244,7 +3246,7 @@ class CpplintTest(CpplintTestBase):
 
   def testNewlineAtEOF(self):
     def DoTest(self, data, is_missing_eof):
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData('foo.cc', 'cc', data.split('\n'),
                               error_collector)
       # The warning appears only once.
@@ -3259,7 +3261,7 @@ class CpplintTest(CpplintTestBase):
 
   def testInvalidUtf8(self):
     def DoTest(self, raw_bytes, has_invalid_utf8):
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       if sys.version_info < (3,):
           unidata = unicode(raw_bytes, 'utf8', 'replace').split('\n')
       else:
@@ -3285,7 +3287,7 @@ class CpplintTest(CpplintTestBase):
 
   def testBadCharacters(self):
     # Test for NUL bytes only
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('nul.cc', 'cc',
                             ['// Copyright 2014 Your Company.',
                              '\0', ''], error_collector)
@@ -3295,7 +3297,7 @@ class CpplintTest(CpplintTestBase):
 
     # Make sure both NUL bytes and UTF-8 are caught if they appear on
     # the same line.
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     raw_bytes = codecs_latin_encode('\xe9x\0')
     if sys.version_info < (3,):
       unidata = unicode(raw_bytes, 'utf8', 'replace')
@@ -3314,11 +3316,11 @@ class CpplintTest(CpplintTestBase):
          'Line contains NUL byte.  [readability/nul] [5]'])
 
   def testIsBlankLine(self):
-    self.assert_(cpplint.IsBlankLine(''))
-    self.assert_(cpplint.IsBlankLine(' '))
-    self.assert_(cpplint.IsBlankLine(' \t\r\n'))
-    self.assert_(not cpplint.IsBlankLine('int a;'))
-    self.assert_(not cpplint.IsBlankLine('{'))
+    self.assertTrue(cpplint.IsBlankLine(''))
+    self.assertTrue(cpplint.IsBlankLine(' '))
+    self.assertTrue(cpplint.IsBlankLine(' \t\r\n'))
+    self.assertTrue(not cpplint.IsBlankLine('int a;'))
+    self.assertTrue(not cpplint.IsBlankLine('{'))
 
   def testBlankLinesCheck(self):
     self.TestBlankLinesCheck(['{\n', '\n', '\n', '}\n'], 1, 1)
@@ -3337,7 +3339,7 @@ class CpplintTest(CpplintTestBase):
         ['int x(\n', '   int a) {\n', '\n', 'return 0;\n', '}'], 1, 0)
 
   def testAllowBlankLineBeforeClosingNamespace(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['namespace {',
                              '',
@@ -3362,7 +3364,7 @@ class CpplintTest(CpplintTestBase):
         '  [whitespace/blank_line] [3]'))
 
   def testAllowBlankLineBeforeIfElseChain(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['if (hoge) {',
                              '',  # No warning
@@ -3379,7 +3381,7 @@ class CpplintTest(CpplintTestBase):
         '  [whitespace/blank_line] [3]'))
 
   def testAllowBlankLineAfterExtern(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['extern "C" {',
                              '',
@@ -3395,7 +3397,7 @@ class CpplintTest(CpplintTestBase):
         '  [whitespace/blank_line] [3]'))
 
   def testBlankLineBeforeSectionKeyword(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['class A {',
                              ' public:',
@@ -3431,7 +3433,7 @@ class CpplintTest(CpplintTestBase):
         '  [whitespace/blank_line] [3]'))
 
   def testNoBlankLineAfterSectionKeyword(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['class A {',
                              ' public:',
@@ -3455,7 +3457,7 @@ class CpplintTest(CpplintTestBase):
         '  [whitespace/blank_line] [3]'))
 
   def testAllowBlankLinesInRawStrings(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['// Copyright 2014 Your Company.',
                              'static const char *kData[] = {R"(',
@@ -3468,7 +3470,7 @@ class CpplintTest(CpplintTestBase):
     self.assertEquals('', error_collector.Results())
 
   def testElseOnSameLineAsClosingBraces(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['if (hoge) {',
                              '}',
@@ -3482,7 +3484,7 @@ class CpplintTest(CpplintTestBase):
         'An else should appear on the same line as the preceding }'
         '  [whitespace/newline] [4]'))
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['if (hoge) {',
                              '',
@@ -3496,7 +3498,7 @@ class CpplintTest(CpplintTestBase):
         'An else should appear on the same line as the preceding }'
         '  [whitespace/newline] [4]'))
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['if (hoge) {',
                              '',
@@ -3508,7 +3510,7 @@ class CpplintTest(CpplintTestBase):
         '  [whitespace/newline] [4]'))
 
   def testMultipleStatementsOnSameLine(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['for (int i = 0; i < 1; i++) {}',
                              'switch (x) {',
@@ -3527,7 +3529,7 @@ class CpplintTest(CpplintTestBase):
     cpplint._cpplint_state.verbose_level = old_verbose_level
 
   def testLambdasOnSameLine(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     old_verbose_level = cpplint._cpplint_state.verbose_level
     cpplint._cpplint_state.verbose_level = 0
     cpplint.ProcessFileData('foo.cc', 'cc',
@@ -3538,7 +3540,7 @@ class CpplintTest(CpplintTestBase):
     self.assertEquals(0, error_collector.Results().count(
         'More than one command on the same line  [whitespace/newline] [0]'))
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     old_verbose_level = cpplint._cpplint_state.verbose_level
     cpplint._cpplint_state.verbose_level = 0
     cpplint.ProcessFileData('foo.cc', 'cc',
@@ -3550,7 +3552,7 @@ class CpplintTest(CpplintTestBase):
     self.assertEquals(0, error_collector.Results().count(
         'More than one command on the same line  [whitespace/newline] [0]'))
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     old_verbose_level = cpplint._cpplint_state.verbose_level
     cpplint._cpplint_state.verbose_level = 0
     cpplint.ProcessFileData('foo.cc', 'cc',
@@ -3562,7 +3564,7 @@ class CpplintTest(CpplintTestBase):
     self.assertEquals(0, error_collector.Results().count(
         'More than one command on the same line  [whitespace/newline] [0]'))
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     old_verbose_level = cpplint._cpplint_state.verbose_level
     cpplint._cpplint_state.verbose_level = 0
     cpplint.ProcessFileData('foo.cc', 'cc',
@@ -3575,7 +3577,7 @@ class CpplintTest(CpplintTestBase):
         'More than one command on the same line  [whitespace/newline] [0]'))
 
   def testEndOfNamespaceComments(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('foo.cc', 'cc',
                             ['namespace {',
                              '',
@@ -4391,7 +4393,7 @@ class CpplintTest(CpplintTestBase):
       cpplint._DEFAULT_FILTERS = default_filters
 
   def testDuplicateHeader(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('path/self.cc', 'cc',
                             ['// Copyright 2014 Your Company. All Rights Reserved.',
                              '#include "path/self.h"',
@@ -4495,7 +4497,7 @@ class CpplintTest(CpplintTestBase):
 
   def GetBuildHeaderGuardPreprocessorSymbol(self, file_path):
     # Figure out the expected header guard by processing an empty file.
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h', [], error_collector)
     for error in error_collector.ResultList():
       matched = re.search(
@@ -4511,7 +4513,7 @@ class CpplintTest(CpplintTestBase):
     self.assertTrue(re.search('MYDIR_FOO_H_$', expected_guard))
 
     # No guard at all: expect one error.
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h', [], error_collector)
     self.assertEquals(
         1,
@@ -4521,7 +4523,7 @@ class CpplintTest(CpplintTestBase):
         error_collector.ResultList())
 
     # No header guard, but the error is suppressed.
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h',
                             ['// Copyright 2014 Your Company.',
                              '// NOLINT(build/header_guard)', ''],
@@ -4529,7 +4531,7 @@ class CpplintTest(CpplintTestBase):
     self.assertEquals([], error_collector.ResultList())
 
     # Wrong guard
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h',
                             ['#ifndef FOO_H', '#define FOO_H'], error_collector)
     self.assertEquals(
@@ -4540,7 +4542,7 @@ class CpplintTest(CpplintTestBase):
         error_collector.ResultList())
 
     # No define
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h',
                             ['#ifndef %s' % expected_guard], error_collector)
     self.assertEquals(
@@ -4551,7 +4553,7 @@ class CpplintTest(CpplintTestBase):
         error_collector.ResultList())
 
     # Mismatched define
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h',
                             ['#ifndef %s' % expected_guard,
                              '#define FOO_H'],
@@ -4564,7 +4566,7 @@ class CpplintTest(CpplintTestBase):
         error_collector.ResultList())
 
     # No endif
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h',
                             ['#ifndef %s' % expected_guard,
                              '#define %s' % expected_guard,
@@ -4578,7 +4580,7 @@ class CpplintTest(CpplintTestBase):
         error_collector.ResultList())
 
     # Commentless endif
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h',
                             ['#ifndef %s' % expected_guard,
                              '#define %s' % expected_guard,
@@ -4592,7 +4594,7 @@ class CpplintTest(CpplintTestBase):
         error_collector.ResultList())
 
     # Commentless endif for old-style guard
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h',
                             ['#ifndef %s_' % expected_guard,
                              '#define %s_' % expected_guard,
@@ -4606,7 +4608,7 @@ class CpplintTest(CpplintTestBase):
         error_collector.ResultList())
 
     # No header guard errors
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h',
                             ['#ifndef %s' % expected_guard,
                              '#define %s' % expected_guard,
@@ -4617,7 +4619,7 @@ class CpplintTest(CpplintTestBase):
         self.fail('Unexpected error: %s' % line)
 
     # No header guard errors for old-style guard
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h',
                             ['#ifndef %s_' % expected_guard,
                              '#define %s_' % expected_guard,
@@ -4631,7 +4633,7 @@ class CpplintTest(CpplintTestBase):
     try:
       cpplint._cpplint_state.verbose_level = 0
       # Warn on old-style guard if verbosity is 0.
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData(file_path, 'h',
                               ['#ifndef %s_' % expected_guard,
                                '#define %s_' % expected_guard,
@@ -4647,7 +4649,7 @@ class CpplintTest(CpplintTestBase):
       cpplint._cpplint_state.verbose_level = old_verbose_level
 
     # Completely incorrect header guard
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h',
                             ['#ifndef FOO',
                              '#define FOO',
@@ -4667,7 +4669,7 @@ class CpplintTest(CpplintTestBase):
         error_collector.ResultList())
 
     # incorrect header guard with nolint
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'h',
                             ['#ifndef FOO  // NOLINT',
                              '#define FOO',
@@ -4688,7 +4690,7 @@ class CpplintTest(CpplintTestBase):
 
     # Special case for flymake
     for test_file in ['mydir/foo_flymake.h', 'mydir/.flymake/foo.h']:
-      error_collector = ErrorCollector(self.assert_)
+      error_collector = ErrorCollector(self.assertTrue)
       cpplint.ProcessFileData(test_file, 'h',
                               ['// Copyright 2014 Your Company.', ''],
                               error_collector)
@@ -4702,7 +4704,7 @@ class CpplintTest(CpplintTestBase):
     # Cuda guard
     file_path = 'mydir/foo.cuh'
     expected_guard = self.GetBuildHeaderGuardPreprocessorSymbol(file_path)
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'cuh',
                             ['#ifndef FOO',
                              '#define FOO',
@@ -4722,7 +4724,7 @@ class CpplintTest(CpplintTestBase):
         error_collector.ResultList())
 
   def testPragmaOnce(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData('mydir/foo.h', 'h',
         ['// Copyright 2014 Your Company.', '#pragma once', ''],
         error_collector)
@@ -5002,7 +5004,7 @@ class CpplintTest(CpplintTestBase):
     self.TestLanguageRulesCheck('foo.h', code, '')
 
   def testBuildPrintfFormat(self):
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(
         'foo.cc', 'cc',
         [r'printf("\%%d", value);',
@@ -5016,7 +5018,7 @@ class CpplintTest(CpplintTestBase):
             '%, [, (, and { are undefined character escapes.  Unescape them.'
             '  [build/printf_format] [3]'))
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(
         'foo.cc', 'cc',
         ['// Copyright 2014 Your Company.',
@@ -5135,13 +5137,13 @@ class CpplintTest(CpplintTestBase):
     file_path = 'mydir/googleclient/foo.cc'
 
     # There should be a copyright message in the first 10 lines
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'cc', [], error_collector)
     self.assertEquals(
         1,
         error_collector.ResultList().count(legal_copyright_message))
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(
         file_path, 'cc',
         ['' for unused_i in range(10)] + [copyright_line],
@@ -5151,13 +5153,13 @@ class CpplintTest(CpplintTestBase):
         error_collector.ResultList().count(legal_copyright_message))
 
     # Test that warning isn't issued if Copyright line appears early enough.
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(file_path, 'cc', [copyright_line], error_collector)
     for message in error_collector.ResultList():
       if message.find('legal/copyright') != -1:
         self.fail('Unexpected error: %s' % message)
 
-    error_collector = ErrorCollector(self.assert_)
+    error_collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(
         file_path, 'cc',
         ['' for unused_i in range(9)] + [copyright_line],
@@ -5193,14 +5195,14 @@ class Cxx11Test(CpplintTestBase):
     lines.append('')
 
     # Process the file and check resulting error count.
-    collector = ErrorCollector(self.assert_)
+    collector = ErrorCollector(self.assertTrue)
     cpplint.ProcessFileData(filename, extension, lines, collector)
     error_list = collector.ResultList()
     self.assertEquals(count, len(error_list), error_list)
 
   def TestCxx11Feature(self, code, expected_error):
     lines = code.split('\n')
-    collector = ErrorCollector(self.assert_)
+    collector = ErrorCollector(self.assertTrue)
     cpplint.RemoveMultiLineComments('foo.h', lines, collector)
     clean_lines = cpplint.CleansedLines(lines)
     cpplint.FlagCxx11Features('foo.cc', clean_lines, 0, collector)
@@ -5258,7 +5260,7 @@ class Cxx14Test(CpplintTestBase):
 
   def TestCxx14Feature(self, code, expected_error):
     lines = code.split('\n')
-    collector = ErrorCollector(self.assert_)
+    collector = ErrorCollector(self.assertTrue)
     cpplint.RemoveMultiLineComments('foo.h', lines, collector)
     clean_lines = cpplint.CleansedLines(lines)
     cpplint.FlagCxx14Features('foo.cc', clean_lines, 0, collector)
@@ -5274,6 +5276,9 @@ class Cxx14Test(CpplintTestBase):
 
 
 class CleansedLinesTest(unittest.TestCase):
+
+  def setUp(self):
+    self.assertEquals = self.assertEqual
 
   def testInit(self):
     lines = ['Line 1',
@@ -5659,6 +5664,7 @@ class CheckForFunctionLengthsTest(CpplintTestBase):
 
   def setUp(self):
     # Reducing these thresholds for the tests speeds up tests significantly.
+    CpplintTestBase.setUp(self)
     self.old_normal_trigger = cpplint._FunctionState._NORMAL_TRIGGER
     self.old_test_trigger = cpplint._FunctionState._TEST_TRIGGER
 
@@ -6010,6 +6016,7 @@ def TrimExtraIndent(text_block):
 class CloseExpressionTest(unittest.TestCase):
 
   def setUp(self):
+    self.assertEquals = self.assertEqual
     self.lines = cpplint.CleansedLines(
         #           1         2         3         4         5
         # 0123456789012345678901234567890123456789012345678901234567890
@@ -6081,7 +6088,8 @@ class NestingStateTest(unittest.TestCase):
 
   def setUp(self):
     self.nesting_state = cpplint.NestingState()
-    self.error_collector = ErrorCollector(self.assert_)
+    self.error_collector = ErrorCollector(self.assertTrue)
+    self.assertEquals = self.assertEqual
 
   def UpdateWithLines(self, lines):
     clean_lines = cpplint.CleansedLines(lines)
@@ -6464,6 +6472,7 @@ class QuietTest(unittest.TestCase):
     self.python_executable = sys.executable or 'python'
     self.cpplint_test_h = os.path.join(self.this_dir_path,
                                        'cpplint_test_header.h')
+    self.assertEquals = self.assertEqual
     open(self.cpplint_test_h, 'w').close()
 
   def tearDown(self):
