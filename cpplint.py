@@ -98,10 +98,9 @@ Syntax: cpplint.py [--verbose=#] [--output=emacs|eclipse|vs7|junit|sed|gsed]
   certain of the problem, and 1 meaning it could be a legitimate construct.
   This will miss some errors, and is not a substitute for a code review.
 
-  To suppress false-positive errors of certain categories, add a
-  'NOLINT(category[, category...])' comment to the line.  NOLINT or NOLINT(*)
-  suppresses errors of all categories on that line. To suppress categories
-  on the next line use NOLINTNEXTLINE instead of NOLINT.
+  To suppress false-positive errors of a certain category, add a
+  'NOLINT(category)' comment to the line.  NOLINT or NOLINT(*)
+  suppresses errors of all categories on that line.
 
   The files passed in will be linted; at least one file must be provided.
   Default linted extensions are %s.
@@ -409,7 +408,7 @@ _CPP_HEADERS = frozenset([
     'alloc.h',
     'builtinbuf.h',
     'bvector.h',
-    # 'complex.h', collides with System C header "complex.h"
+    'complex.h',
     'defalloc.h',
     'deque.h',
     'editbuf.h',
@@ -521,22 +520,6 @@ _CPP_HEADERS = frozenset([
     'optional',
     'string_view',
     'variant',
-    # 17.6.1.2 C++20 headers
-    'barrier',
-    'bit',
-    'compare',
-    'concepts',
-    'coroutine',
-    'format',
-    'latch'
-    'numbers',
-    'ranges',
-    'semaphore',
-    'source_location',
-    'span',
-    'stop_token',
-    'syncstream',
-    'version',
     # 17.6.1.2 C++ headers for C library facilities
     'cassert',
     'ccomplex',
@@ -1002,11 +985,12 @@ def ParseNolintSuppressions(filename, raw_line, linenum, error):
       suppressed_line = linenum + 1
     else:
       suppressed_line = linenum
-    categories = matched.group(2)
-    if categories in (None, '(*)'):  # => "suppress all"
+    category = matched.group(2)
+    if category in (None, '(*)'):  # => "suppress all"
       _error_suppressions.setdefault(None, set()).add(suppressed_line)
-    elif categories.startswith('(') and categories.endswith(')'):
-      for category in set(map(lambda c: c.strip(), categories[1:-1].split(','))):
+    else:
+      if category.startswith('(') and category.endswith(')'):
+        category = category[1:-1]
         if category in _ERROR_CATEGORIES:
           _error_suppressions.setdefault(category, set()).add(suppressed_line)
         elif any(c for c in _OTHER_NOLINT_CATEGORY_PREFIXES if category.startswith(c)):
@@ -3879,7 +3863,9 @@ def CheckOperatorSpacing(filename, clean_lines, linenum, error):
   #
   # Note that && is not included here.  This is because there are too
   # many false positives due to RValue references.
-  match = Search(r'[^<>=!\s](==|!=|<=|>=|\|\|)[^<>=!\s,;\)]', line)
+  match = Search(r'[^<>=!\s](==|!=|<=|>=|\|\|)[^<>=!\s,;\)]', line) \
+      or ((Search(r'[\w.](>=|<=|==|!=|&=|\^=|\|=|\+=|\*=|\/=|\%=)', line)\
+      or Search(r'(>=|<=|==|!=|&=|\^=|\|=|\+=|\*=|\/=|\%=)[\w.]', line)))
   if match:
     error(filename, linenum, 'whitespace/operators', 3,
           'Missing spaces around %s' % match.group(1))
@@ -5116,7 +5102,7 @@ def CheckIncludeLine(filename, clean_lines, linenum, include_state, error):
   match = _RE_PATTERN_INCLUDE.search(line)
   if match:
     include = match.group(2)
-    used_angle_brackets = match.group(1) == '<'
+    used_angle_brackets = (match.group(1) == '<')
     duplicate_line = include_state.FindHeader(include)
     if duplicate_line >= 0:
       error(filename, linenum, 'build/include', 4,
